@@ -8,12 +8,25 @@
 </head>
 <body>
   <div class="container">
-    <h3>Video Player Controls</h3>
+    <div class="header">
+      <div class="icon">🎬</div>
+      <h3>Video Player Controls</h3>
+      <p class="subtitle">Enhance your viewing experience</p>
+    </div>
     <div class="button-group">
-      <button id="goFullScreen" class="btn btn-primary">Play in Full Window</button>
-      <button id="goNormal" class="btn btn-secondary">Go Normal</button>
+      <button id="goFullScreen" class="btn btn-primary">
+        <span class="btn-icon">⛶</span>
+        <span class="btn-text">Play in Full Window</span>
+      </button>
+      <button id="goNormal" class="btn btn-secondary">
+        <span class="btn-icon">↩</span>
+        <span class="btn-text">Go Normal</span>
+      </button>
     </div>
     <div id="status" class="status"></div>
+    <div class="footer">
+      <span>Created with <span class="heart">❤️</span> by Mohshin</span>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>
