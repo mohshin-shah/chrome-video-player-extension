@@ -83,19 +83,82 @@ function showStatus(message, type) {
   }, 2000);
 }
 
+// Toggle transcript wrapper visibility
+async function toggleTranscript() {
+  try {
+    const tab = await getCurrentTab();
+    if (!tab.id) {
+      showStatus('Error: No active tab found', 'error');
+      return;
+    }
+
+    if (!isAllowedDomain(tab.url)) {
+      showStatus('Error: This extension only works on futurense.zoom.us', 'error');
+      return;
+    }
+
+    // Send message to content script to toggle transcript
+    let response;
+    try {
+      response = await chrome.tabs.sendMessage(tab.id, { action: 'toggleTranscript' });
+    } catch (error) {
+      // If connection fails, the content script might not be loaded
+      // Try to inject it manually
+      if (error.message && error.message.includes('Could not establish connection')) {
+        try {
+          // Inject content script if not already loaded
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['content.js']
+          });
+          // Wait a moment for the script to initialize
+          await new Promise(resolve => setTimeout(resolve, 150));
+          // Try sending message again
+          response = await chrome.tabs.sendMessage(tab.id, { action: 'toggleTranscript' });
+        } catch (retryError) {
+          console.error('Retry failed:', retryError);
+          showStatus('Error: Please refresh the page and try again', 'error');
+          return;
+        }
+      } else {
+        throw error;
+      }
+    }
+    
+    if (response && response.success) {
+      const status = response.visible ? 'Transcript shown!' : 'Transcript hidden!';
+      showStatus(status, 'success');
+    } else if (response && response.error) {
+      showStatus(response.error, 'error');
+    } else {
+      showStatus('Transcript wrapper not found on this page', 'error');
+    }
+  } catch (error) {
+    console.error('Error toggling transcript:', error);
+    if (error.message && error.message.includes('Could not establish connection')) {
+      showStatus('Error: Please refresh the page and try again', 'error');
+    } else {
+      showStatus('Error: ' + error.message, 'error');
+    }
+  }
+}
+
 // Update UI based on current tab
 async function updateUI() {
   const tab = await getCurrentTab();
   const goFullScreenBtn = document.getElementById('goFullScreen');
   const goNormalBtn = document.getElementById('goNormal');
+  const toggleTranscriptBtn = document.getElementById('toggleTranscript');
   
   if (!isAllowedDomain(tab.url)) {
     goFullScreenBtn.disabled = true;
     goNormalBtn.disabled = true;
+    toggleTranscriptBtn.disabled = true;
     showStatus('This extension only works on futurense.zoom.us', 'error');
   } else {
     goFullScreenBtn.disabled = false;
     goNormalBtn.disabled = false;
+    toggleTranscriptBtn.disabled = false;
   }
 }
 
@@ -104,5 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateUI();
   document.getElementById('goFullScreen').addEventListener('click', injectCSS);
   document.getElementById('goNormal').addEventListener('click', removeCSS);
+  document.getElementById('toggleTranscript').addEventListener('click', toggleTranscript);
 });
 
