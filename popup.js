@@ -83,6 +83,55 @@ function showStatus(message, type) {
   }, 2000);
 }
 
+// Get current transcript state
+async function getTranscriptState() {
+  try {
+    const tab = await getCurrentTab();
+    if (!tab.id || !isAllowedDomain(tab.url)) {
+      return null;
+    }
+
+    let response;
+    try {
+      response = await chrome.tabs.sendMessage(tab.id, { action: 'getTranscriptState' });
+    } catch (error) {
+      if (error.message && error.message.includes('Could not establish connection')) {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['content.js']
+          });
+          await new Promise(resolve => setTimeout(resolve, 150));
+          response = await chrome.tabs.sendMessage(tab.id, { action: 'getTranscriptState' });
+        } catch (retryError) {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+    
+    return response && response.success ? response.visible : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Update transcript button and hint based on state
+function updateTranscriptUI(isVisible) {
+  const toggleTranscriptBtn = document.getElementById('toggleTranscript');
+  const btnText = toggleTranscriptBtn.querySelector('.btn-text');
+  const transcriptHint = document.getElementById('transcriptHint');
+  
+  if (isVisible) {
+    btnText.textContent = 'Hide Transcript';
+    transcriptHint.style.display = 'block';
+  } else {
+    btnText.textContent = 'Show Transcript';
+    transcriptHint.style.display = 'none';
+  }
+}
+
 // Toggle transcript wrapper visibility
 async function toggleTranscript() {
   try {
@@ -128,6 +177,7 @@ async function toggleTranscript() {
     if (response && response.success) {
       const status = response.visible ? 'Transcript shown!' : 'Transcript hidden!';
       showStatus(status, 'success');
+      updateTranscriptUI(response.visible);
     } else if (response && response.error) {
       showStatus(response.error, 'error');
     } else {
@@ -159,6 +209,11 @@ async function updateUI() {
     goFullScreenBtn.disabled = false;
     goNormalBtn.disabled = false;
     toggleTranscriptBtn.disabled = false;
+    // Get and update transcript state
+    const transcriptState = await getTranscriptState();
+    if (transcriptState !== null) {
+      updateTranscriptUI(transcriptState);
+    }
   }
 }
 

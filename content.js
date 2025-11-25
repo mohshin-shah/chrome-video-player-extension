@@ -41,6 +41,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       sendResponse({ success: false, visible: false, error: 'Transcript wrapper not found' });
     }
     return true;
+  } else if (request.action === 'getTranscriptState') {
+    const transcriptWrapper = document.querySelector('.transcript-wrapper');
+    if (!transcriptWrapper) {
+      sendResponse({ success: false, visible: false, error: 'Transcript wrapper not found' });
+      return true;
+    }
+    const isHidden = transcriptWrapper.classList.contains('transcript-hidden');
+    sendResponse({ success: true, visible: !isHidden });
+    return true;
   }
   return false;
 });
