@@ -45,6 +45,14 @@ header.rec-header-container {
   box-shadow: -8px 0 30px rgba(0, 0, 0, 0.4), -4px 0 15px rgba(0, 0, 0, 0.3) !important;
 }
 
+.transcript-wrapper.transcript-pinned {
+  opacity: 1 !important;
+}
+
+.transcript-wrapper.transcript-pinned:hover {
+  opacity: 1 !important;
+}
+
 .transcript-wrapper.transcript-hidden {
   display: none !important;
 }

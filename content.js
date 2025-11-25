@@ -50,6 +50,30 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     const isHidden = transcriptWrapper.classList.contains('transcript-hidden');
     sendResponse({ success: true, visible: !isHidden });
     return true;
+  } else if (request.action === 'togglePinTranscript') {
+    const transcriptWrapper = document.querySelector('.transcript-wrapper');
+    if (!transcriptWrapper) {
+      sendResponse({ success: false, pinned: false, error: 'Transcript wrapper not found' });
+      return true;
+    }
+    const isPinned = transcriptWrapper.classList.contains('transcript-pinned');
+    if (isPinned) {
+      transcriptWrapper.classList.remove('transcript-pinned');
+      sendResponse({ success: true, pinned: false });
+    } else {
+      transcriptWrapper.classList.add('transcript-pinned');
+      sendResponse({ success: true, pinned: true });
+    }
+    return true;
+  } else if (request.action === 'getPinState') {
+    const transcriptWrapper = document.querySelector('.transcript-wrapper');
+    if (!transcriptWrapper) {
+      sendResponse({ success: false, pinned: false, error: 'Transcript wrapper not found' });
+      return true;
+    }
+    const isPinned = transcriptWrapper.classList.contains('transcript-pinned');
+    sendResponse({ success: true, pinned: isPinned });
+    return true;
   }
   return false;
 });
