@@ -25,11 +25,11 @@ header.rec-header-container {
   position: fixed !important;
   top: 50% !important;
   right: 0 !important;
-  width: 20vw !important;
-  height: calc(100vw * 9/16) !important;
+  width: calc(min(100vw * 0.3, 300px)) !important;
+  height: calc(min(100vw * 9/16, 1276px)) !important;
   z-index: 9999 !important;
   overflow-y: auto !important;
-  background-color: rgba(246, 243, 243, 0.5) !important;
+  background-color: rgba(246, 243, 243) !important;
   backdrop-filter: blur(3px) !important;
   display: block !important;
   opacity: 0.0 !important;
