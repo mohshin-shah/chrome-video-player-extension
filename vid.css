@@ -16,14 +16,8 @@ body:has(.transcript-wrapper:not(.transcript-hidden)) .player-view {
   width: 100vw !important;
 }
 
-/* When transcript is pinned, make video containers 80vw for side-by-side layout */
-body:has(.transcript-wrapper.transcript-pinned) .player-panel-r,
-body:has(.transcript-wrapper.transcript-pinned) .player-view-wrapper,
-body:has(.transcript-wrapper.transcript-pinned) .player-view {
-  width: 80vw !important;
-}
-
-.highlights-control-wrapper {
+.highlights-control-wrapper,
+header.rec-header-container {
   display: none !important;
 }
 
@@ -51,18 +45,6 @@ body:has(.transcript-wrapper.transcript-pinned) .player-view {
   box-shadow: -8px 0 30px rgba(0, 0, 0, 0.4), -4px 0 15px rgba(0, 0, 0, 0.3) !important;
 }
 
-.transcript-wrapper.transcript-pinned {
-  opacity: 1 !important;
-  width: 20vw !important;
-  height: 100vh !important;
-  top: 0 !important;
-  transform: none !important;
-}
-
-.transcript-wrapper.transcript-pinned:hover {
-  opacity: 1 !important;
-}
-
 .transcript-wrapper.transcript-hidden {
   display: none !important;
 }
@@ -79,11 +61,6 @@ body:has(.transcript-wrapper:not(.transcript-hidden)) .video-player {
   width: 80vw !important;
 }
 
-/* When transcript is pinned, make video player 80vw */
-body:has(.transcript-wrapper.transcript-pinned) .video-player {
-  width: 80vw !important;
-}
-
 video#vjs_video_3_html5_api {
   background-color: rgb(0, 0, 0);
   position: fixed;
@@ -94,11 +71,6 @@ video#vjs_video_3_html5_api {
 /* When transcript is visible, make video element 80vw */
 body:has(.transcript-wrapper:not(.transcript-hidden)) video#vjs_video_3_html5_api {
   width: 100vw !important;
-}
-
-/* When transcript is pinned, make video element 80vw for side-by-side layout */
-body:has(.transcript-wrapper.transcript-pinned) video#vjs_video_3_html5_api {
-  width: 80vw !important;
 }
 
 .highlights {

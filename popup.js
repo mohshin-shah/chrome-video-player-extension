@@ -117,70 +117,18 @@ async function getTranscriptState() {
   }
 }
 
-// Get current pin state
-async function getPinState() {
-  try {
-    const tab = await getCurrentTab();
-    if (!tab.id || !isAllowedDomain(tab.url)) {
-      return null;
-    }
-
-    let response;
-    try {
-      response = await chrome.tabs.sendMessage(tab.id, { action: 'getPinState' });
-    } catch (error) {
-      if (error.message && error.message.includes('Could not establish connection')) {
-        try {
-          await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            files: ['content.js']
-          });
-          await new Promise(resolve => setTimeout(resolve, 150));
-          response = await chrome.tabs.sendMessage(tab.id, { action: 'getPinState' });
-        } catch (retryError) {
-          return null;
-        }
-      } else {
-        return null;
-      }
-    }
-    
-    return response && response.success ? response.pinned : null;
-  } catch (error) {
-    return null;
-  }
-}
-
 // Update transcript button and hint based on state
 function updateTranscriptUI(isVisible) {
   const toggleTranscriptBtn = document.getElementById('toggleTranscript');
   const btnText = toggleTranscriptBtn.querySelector('.btn-text');
   const transcriptHint = document.getElementById('transcriptHint');
-  const pinTranscriptBtn = document.getElementById('pinTranscript');
-  const pinBtnText = pinTranscriptBtn.querySelector('.btn-text');
   
   if (isVisible) {
     btnText.textContent = 'Hide Transcript';
     transcriptHint.style.display = 'block';
-    pinTranscriptBtn.style.display = 'flex';
   } else {
     btnText.textContent = 'Show Transcript';
     transcriptHint.style.display = 'none';
-    pinTranscriptBtn.style.display = 'none';
-  }
-}
-
-// Update pin button UI
-function updatePinUI(isPinned) {
-  const pinTranscriptBtn = document.getElementById('pinTranscript');
-  const pinBtnText = pinTranscriptBtn.querySelector('.btn-text');
-  
-  if (isPinned) {
-    pinBtnText.textContent = 'Unpin Transcript';
-    pinTranscriptBtn.classList.add('btn-pinned');
-  } else {
-    pinBtnText.textContent = 'Pin Transcript';
-    pinTranscriptBtn.classList.remove('btn-pinned');
   }
 }
 
@@ -230,13 +178,6 @@ async function toggleTranscript() {
       const status = response.visible ? 'Transcript shown!' : 'Transcript hidden!';
       showStatus(status, 'success');
       updateTranscriptUI(response.visible);
-      // Update pin state if transcript is visible
-      if (response.visible) {
-        const pinState = await getPinState();
-        if (pinState !== null) {
-          updatePinUI(pinState);
-        }
-      }
     } else if (response && response.error) {
       showStatus(response.error, 'error');
     } else {
@@ -252,91 +193,26 @@ async function toggleTranscript() {
   }
 }
 
-// Toggle pin transcript
-async function togglePinTranscript() {
-  try {
-    const tab = await getCurrentTab();
-    if (!tab.id) {
-      showStatus('Error: No active tab found', 'error');
-      return;
-    }
-
-    if (!isAllowedDomain(tab.url)) {
-      showStatus('Error: This extension only works on futurense.zoom.us', 'error');
-      return;
-    }
-
-    let response;
-    try {
-      response = await chrome.tabs.sendMessage(tab.id, { action: 'togglePinTranscript' });
-    } catch (error) {
-      if (error.message && error.message.includes('Could not establish connection')) {
-        try {
-          await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            files: ['content.js']
-          });
-          await new Promise(resolve => setTimeout(resolve, 150));
-          response = await chrome.tabs.sendMessage(tab.id, { action: 'togglePinTranscript' });
-        } catch (retryError) {
-          console.error('Retry failed:', retryError);
-          showStatus('Error: Please refresh the page and try again', 'error');
-          return;
-        }
-      } else {
-        throw error;
-      }
-    }
-    
-    if (response && response.success) {
-      const status = response.pinned ? 'Transcript pinned!' : 'Transcript unpinned!';
-      showStatus(status, 'success');
-      updatePinUI(response.pinned);
-    } else if (response && response.error) {
-      showStatus(response.error, 'error');
-    } else {
-      showStatus('Transcript wrapper not found on this page', 'error');
-    }
-  } catch (error) {
-    console.error('Error toggling pin:', error);
-    if (error.message && error.message.includes('Could not establish connection')) {
-      showStatus('Error: Please refresh the page and try again', 'error');
-    } else {
-      showStatus('Error: ' + error.message, 'error');
-    }
-  }
-}
-
 // Update UI based on current tab
 async function updateUI() {
   const tab = await getCurrentTab();
   const goFullScreenBtn = document.getElementById('goFullScreen');
   const goNormalBtn = document.getElementById('goNormal');
   const toggleTranscriptBtn = document.getElementById('toggleTranscript');
-  const pinTranscriptBtn = document.getElementById('pinTranscript');
   
   if (!isAllowedDomain(tab.url)) {
     goFullScreenBtn.disabled = true;
     goNormalBtn.disabled = true;
     toggleTranscriptBtn.disabled = true;
-    pinTranscriptBtn.disabled = true;
     showStatus('This extension only works on futurense.zoom.us', 'error');
   } else {
     goFullScreenBtn.disabled = false;
     goNormalBtn.disabled = false;
     toggleTranscriptBtn.disabled = false;
-    pinTranscriptBtn.disabled = false;
     // Get and update transcript state
     const transcriptState = await getTranscriptState();
     if (transcriptState !== null) {
       updateTranscriptUI(transcriptState);
-      // Get and update pin state if transcript is visible
-      if (transcriptState) {
-        const pinState = await getPinState();
-        if (pinState !== null) {
-          updatePinUI(pinState);
-        }
-      }
     }
   }
 }
@@ -347,6 +223,5 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('goFullScreen').addEventListener('click', injectCSS);
   document.getElementById('goNormal').addEventListener('click', removeCSS);
   document.getElementById('toggleTranscript').addEventListener('click', toggleTranscript);
-  document.getElementById('pinTranscript').addEventListener('click', togglePinTranscript);
 });
 
