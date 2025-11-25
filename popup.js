@@ -32,6 +32,13 @@ async function injectCSS() {
       return;
     }
 
+    // First, remove any existing CSS to avoid duplicates
+    await chrome.scripting.removeCSS({
+      target: { tabId: tab.id },
+      files: ['vid.css']
+    });
+
+    // Then inject the CSS
     await chrome.scripting.insertCSS({
       target: { tabId: tab.id },
       files: ['vid.css']
@@ -58,9 +65,36 @@ async function removeCSS() {
       return;
     }
 
+    // Remove CSS file
     await chrome.scripting.removeCSS({
       target: { tabId: tab.id },
       files: ['vid.css']
+    });
+
+    // Also remove any style tags that might have been injected
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        // Remove any style elements with vid.css content
+        const styleSheets = document.styleSheets;
+        for (let i = styleSheets.length - 1; i >= 0; i--) {
+          try {
+            const sheet = styleSheets[i];
+            if (sheet.href && sheet.href.includes('vid.css')) {
+              const ownerNode = sheet.ownerNode;
+              if (ownerNode) {
+                ownerNode.remove();
+              }
+            }
+          } catch (e) {
+            // Cross-origin stylesheets may throw errors, ignore them
+          }
+        }
+        
+        // Remove any injected style tags
+        const styleTags = document.querySelectorAll('style[data-injected="vid-css"]');
+        styleTags.forEach(tag => tag.remove());
+      }
     });
 
     showStatus('Normal mode activated!', 'success');
